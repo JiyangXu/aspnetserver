@@ -10,6 +10,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
+import Constants from "./utilities/Constants";
+import PostCreateForm from "./components/PostCreateForm";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
@@ -41,9 +43,28 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 export default function App() {
   const [posts, setPosts] = useState([]);
+  const [showingCCreateNewPostForm, setShowingCCreateNewPostForm] =
+    useState(false);
+
+  const [updatePost, setUpdatePost] = useState(true);
+  const [updatePostId, setUpdatePostId] = useState(null);
+  const [formData, setFormData] = useState({
+    ["postId"]: null,
+    ["title"]: "",
+    ["content"]: "",
+  });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+
+    console.log(formData);
+  };
 
   function getPosts() {
-    const url = "https://localhost:7012/get-all-posts";
+    const url = Constants.API_URL_GET_ALL_POSTS;
 
     fetch(url, {
       method: "GET",
@@ -56,24 +77,52 @@ export default function App() {
       .catch((err) => console.debug(err));
   }
 
+  const handleUpdateChange = (e) => {
+    setUpdatePostId(e);
+    console.log(updatePostId);
+    console.log(e);
+  };
+
+  const handleUpdate = (postId) => {
+    setFormData({ ...formData, ["postId"]: postId });
+    console.log(formData);
+  };
+
   return (
     <div className="container">
       <div className="row min-vh-100">
         <div className="col d-flex flex-column justify-content-center align-items-center">
-          <div>
-            <div>ASP.NET CURD DEMO</div>
-            <div className="mt-5">
-              <Button className="btn btn-dark btn-lg w-100" onClick={getPosts}>
-                GET ALL POSTS
-              </Button>
-              <Button className="btn btn-secondary btn-lg w-100 mt-4">
-                CREATE NEW POST
-              </Button>
+          {showingCCreateNewPostForm === false && (
+            <div>
+              <div>ASP.NET CURD DEMO</div>
+              <div className="mt-5">
+                <Button
+                  className="btn btn-dark btn-lg w-100"
+                  onClick={getPosts}
+                >
+                  GET ALL POSTS
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowingCCreateNewPostForm(true);
+                  }}
+                  className="btn btn-secondary btn-lg w-100 mt-4"
+                >
+                  CREATE NEW POST
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {posts.length > 0 &&
+            showingCCreateNewPostForm === false &&
+            renderPostTable()}
+
+          {showingCCreateNewPostForm && (
+            <PostCreateForm onPostCreated={onPostCreated} />
+          )}
         </div>
       </div>
-      {post.length > 0 && renderPostTable()};
     </div>
   );
 
@@ -90,22 +139,70 @@ export default function App() {
             </TableRow>
           </TableHead>
           <TableBody>
-            <StyledTableRow>
-              <StyledTableCell align="left">Post 1 ID</StyledTableCell>
-              <StyledTableCell align="left">Post 1 title</StyledTableCell>
-              <StyledTableCell align="left">Post 1 content</StyledTableCell>
-              <StyledTableCell align="left">
-                <Button color="primary" align="left">
-                  Update
-                </Button>
-                <Button color="error" align="left">
-                  Delete
-                </Button>
-              </StyledTableCell>
-            </StyledTableRow>
+            {posts.map((post, i) => (
+              <tr key={post.postId}>
+                <th scope="row">{post.postId}</th>
+                {i !== updatePostId ? (
+                  <th>{post.title}</th>
+                ) : (
+                  <td>
+                    <input
+                      placeholder={post.title}
+                      value={formData.title}
+                      name="title"
+                      type="text"
+                      onChange={handleChange}
+                    />
+                  </td>
+                )}
+
+                {i !== updatePostId ? (
+                  <th>{post.content}</th>
+                ) : (
+                  <td>
+                    <input
+                      placeholder={post.content}
+                      value={formData.content}
+                      name="content"
+                      type="text"
+                      onChange={handleChange}
+                    />
+                  </td>
+                )}
+                <td>
+                  <button onClick={() => handleUpdateChange(i)}>Update</button>
+                  {i === updatePostId && (
+                    <>
+                      <button onClick={() => handleUpdate(post.postId)}>
+                        Change
+                      </button>
+                      <button onClick={() => setUpdatePostId(null)}>
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  <button>Delete</button>
+                </td>
+              </tr>
+            ))}
           </TableBody>
         </Table>
+
+        <button
+          onClick={() => setPosts([])}
+          className="btn btn-dark btn-lg w-100 "
+        >
+          Empty React Array
+        </button>
       </TableContainer>
     );
+  }
+
+  function onPostCreated(createdPost) {
+    setShowingCCreateNewPostForm(false);
+    if (createdPost === null) return;
+    alert("Post Successfully");
+
+    getPosts();
   }
 }
