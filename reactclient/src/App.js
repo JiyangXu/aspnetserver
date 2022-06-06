@@ -48,11 +48,13 @@ export default function App() {
 
   const [updatePost, setUpdatePost] = useState(true);
   const [updatePostId, setUpdatePostId] = useState(null);
-  const [formData, setFormData] = useState({
-    ["postId"]: null,
-    ["title"]: "",
-    ["content"]: "",
+
+  const initialFormData = Object.freeze({
+    postId: "",
+    title: "",
+    content: "",
   });
+  const [formData, setFormData] = useState(initialFormData);
 
   const handleChange = (e) => {
     setFormData({
@@ -143,31 +145,31 @@ export default function App() {
               <tr key={post.postId}>
                 <th scope="row">{post.postId}</th>
                 {i !== updatePostId ? (
-                  <th>{post.title}</th>
+                  <>
+                    <th>{post.title}</th>
+                    <th>{post.content}</th>
+                  </>
                 ) : (
-                  <td>
-                    <input
-                      placeholder={post.title}
-                      value={formData.title}
-                      name="title"
-                      type="text"
-                      onChange={handleChange}
-                    />
-                  </td>
-                )}
-
-                {i !== updatePostId ? (
-                  <th>{post.content}</th>
-                ) : (
-                  <td>
-                    <input
-                      placeholder={post.content}
-                      value={formData.content}
-                      name="content"
-                      type="text"
-                      onChange={handleChange}
-                    />
-                  </td>
+                  <>
+                    <td>
+                      <input
+                        placeholder={post.title}
+                        value={formData.title}
+                        name="title"
+                        type="text"
+                        onChange={handleChange}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        placeholder={post.content}
+                        value={formData.content}
+                        name="content"
+                        type="text"
+                        onChange={handleChange}
+                      />
+                    </td>
+                  </>
                 )}
                 <td>
                   <button onClick={() => handleUpdateChange(i)}>Update</button>
@@ -176,7 +178,12 @@ export default function App() {
                       <button onClick={() => handleUpdate(post.postId)}>
                         Change
                       </button>
-                      <button onClick={() => setUpdatePostId(null)}>
+                      <button
+                        onClick={() => {
+                          setUpdatePostId(null);
+                          setFormData(initialFormData);
+                        }}
+                      >
                         Cancel
                       </button>
                     </>
